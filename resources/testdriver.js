@@ -1066,6 +1066,35 @@
          */
         clear_device_posture: function(context=null) {
             return window.test_driver_internal.clear_device_posture(context);
+        },
+
+        /**
+         * Get a serialized object representing the accessibility API's accessibility node.
+         *
+         * @param {id}        id of element
+         * @returns {Promise} Fullfilled with object representing accessibilty node,
+         *                    rejected in the cases of failures.
+         */
+        get_accessibility_api_node: async function(dom_id) {
+            return window.test_driver_internal.get_accessibility_api_node(dom_id, location.href)
+                .then((jsonresult) => {
+                  return JSON.parse(jsonresult);
+                });
+        },
+
+        /**
+         * Test properties of API's accessibility node.
+         *
+         * @param {id}         id of element
+         * @param {test}       an object of tests
+         * @param {api}        string indicating the API to test
+         * @returns {Promise}  The string "match" when the test succeeds,
+         *                     a failure message otherwise
+         */
+        test_accessibility_api: async function(dom_id, test, api) {
+            return window.test_driver_internal.test_accessibility_api(
+              dom_id, test, api, location.href
+            );
         }
     };
 
@@ -1254,6 +1283,15 @@
 
         async clear_device_posture(context=null) {
             throw new Error("clear_device_posture() is not implemented by testdriver-vendor.js");
+        },
+
+        async get_accessibility_api_node(dom_id, url) {
+            throw new Error("get_accessibility_api_node() is not available.");
+        },
+
+        async test_accessibility_api(dom_id, test, api, url) {
+            throw new Error("test_accessibility_api() is not available.");
         }
+
     };
 })();
