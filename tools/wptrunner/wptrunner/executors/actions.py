@@ -464,6 +464,7 @@ class ClearDevicePostureAction:
     def __call__(self, payload):
         return self.protocol.device_posture.clear_device_posture()
 
+
 class RunBounceTrackingMitigationsAction:
     name = "run_bounce_tracking_mitigations"
 
@@ -544,6 +545,32 @@ class ClearDisplayFeaturesAction:
     def __call__(self, payload):
         return self.protocol.display_features.clear_display_features()
 
+class GetAccessibilityAPINodeAction:
+    name = "get_accessibility_api_node"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        dom_id = payload["dom_id"]
+        url = payload["url"]
+        return self.protocol.platform_accessibility.get_accessibility_api_node(dom_id, url)
+
+class TestAccessibilityAPIAction:
+    name = "test_accessibility_api"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        dom_id = payload["dom_id"]
+        test = payload["test"]
+        api = payload["api"]
+        url = payload["url"]
+        return self.protocol.platform_accessibility.test_accessibility_api(dom_id, test, api, url)
+
 actions = [ClickAction,
            DeleteAllCookiesAction,
            GetAllCookiesAction,
@@ -586,4 +613,7 @@ actions = [ClickAction,
            RemoveVirtualPressureSourceAction,
            SetProtectedAudienceKAnonymityAction,
            SetDisplayFeaturesAction,
-           ClearDisplayFeaturesAction]
+           ClearDisplayFeaturesAction,
+           GetAccessibilityAPINodeAction,
+           TestAccessibilityAPIAction]
+
