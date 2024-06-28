@@ -8,7 +8,8 @@
 <script src="/resources/testdriver-actions.js"></script>
 
 <body>
-  <div id=test role=button>click me</div>
+  <!-- blockquote has different ia2 and msaa roles -->
+  <div id=test role=blockquote>click me</div>
 
   <script>
     promise_test(async t => {

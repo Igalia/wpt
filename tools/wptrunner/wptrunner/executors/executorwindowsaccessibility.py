@@ -31,6 +31,9 @@ oleaccMod = comtypes.client.GetModule("oleacc.dll")
 IAccessible = oleaccMod.IAccessible
 del oleaccMod
 
+## I wonder if I need to get the IAccessible module???
+## Why are we getting 
+
 ia2Tlb = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     "ia2",
@@ -212,9 +215,14 @@ def get_browser_hwnd(product_name):
     return found[0]
 
 
-def to_ia2(obj):
-    serv = obj.QueryInterface(IServiceProvider)
+def to_ia2(node):
+    serv = node.QueryInterface(IServiceProvider)
     return serv.QueryService(IAccessible2._iid_, IAccessible2)
+
+def to_ia(node):
+    serv = node.QueryInterface(IServiceProvider)
+    return serv.QueryService(IAccessible2._iid_, IAccessible2)
+
 
 
 def find_browser(product_name):
@@ -223,40 +231,41 @@ def find_browser(product_name):
     
     hwnd = get_browser_hwnd(product_name)
     root = accessible_object_from_window(hwnd)
-    return to_ia2(root)
+    #return to_ia2(root)
+    return root
 
 
 def find_ia2_node(root, id, depth):
     print("??????????????????????????????????????????????????????")
     print(root)
+    root = to_ia2(root)
     search = f"id:{id};"
     # Child ids begin at 1.
-    #roleint = root.accRole(CHILDID_SELF)
-    #print("--" * depth + " " + role_to_string[roleint])
+    roleint = root.accRole(CHILDID_SELF)
+    print("--" * depth + " " + role_to_string[roleint])
     for i in range(1, root.accChildCount + 1):
         child = to_ia2(root.accChild(i))
         if search in child.attributes:
-            return child
+            return root.accChild(i)
         descendant = find_ia2_node(child, id, depth+1)
         if descendant:
             return descendant
 
 def serialize_node(node):
+    ia2_node = to_ia2(node)
     node_dictionary = {}
     node_dictionary["API"] = "windows"
-    # todo: this is not necesarially the msaa role -- test!! 
-    node_dictionary["msaa_role"] = role_to_string[node.accRole(CHILDID_SELF)]
-    #node_dictionary["name"] = Atspi.Accessible.get_name(node)
+
+    # The next line fails with
+    # _ctypes.COMError: (-2147319779, 'Library not registered.', (None, None, None, 0, None))
+    node_dictionary["msaa_role"] = role_to_string[node.get_accRole(CHILDID_SELF)]
+    node_dictionary["ia2_role"] = role_to_string[ia2_node.accRole(CHILDID_SELF)]
+    print(node_dictionary)
     return node_dictionary
 
 class WindowsAccessibilityExecutorImpl:
     def setup(self, product_name):
         self.product_name = product_name
-        #self.root = find_browser(self.product_name)
-
-        #if not self.root:
-        #    raise Exception(f"Couldn't find application: {product_name}")
-
 
     def get_accessibility_api_node(self, dom_id):
         self.root = find_browser(self.product_name)
