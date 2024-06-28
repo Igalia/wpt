@@ -152,7 +152,7 @@ And here is the mapping from HTML-AAM for a [`<button>`](https://www.w3.org/TR/h
 <summary>Full image description</summary>
 A block diagram.
 
-This diagram extends the <a href="#accessibility_apis_diagram">diagram in the "accessibility tree and accessibility APIs" section</a>,
+This diagram extends the <a href="#user-content-accessibility_apis_diagram">diagram in the "accessibility tree and accessibility APIs" section</a>,
 showing how the WPT application can query the browser's Webdriver API implementation
 to request the computed role and computed label for an element.
 
@@ -191,7 +191,7 @@ Like Computed Label and Computed Role, these would be querying the platform-inde
 <summary>Full image description</summary>
 A block diagram.
 
-This diagram extends the <a href="#webdriver_accessibility_diagram">diagram in the "Prior art" section</a>.
+This diagram extends the <a href="#user-content-webdriver_accessibility_diagram">diagram in the "Prior art" section</a>.
 
 It adds a dotted line arrow from the WPT application to the Plaform API mapping adapter within the Browser application, indicating the addition proposed here to use the Platform Accessibility APIs directly to test the browser's support for those APIs.
 
