@@ -12,7 +12,7 @@ As of today, we don't have an automated way to test these specifications, the wa
 We'd like to explore what we would need to implement in order to be able to write fully automated tests for platform accessiblity API mappings.
 
 <details>
-<summary>Background: Accessibility tree, Accessibility APIs, AAMs</summary>
+<summary><h2>Background: Accessibility tree, Accessibility APIs, AAMs</h2></summary>
 
 ### Background: the accessibility tree and accessibility APIs
 
