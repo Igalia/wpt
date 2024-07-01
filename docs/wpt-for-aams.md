@@ -14,8 +14,7 @@ We'd like to explore what we would need to implement in order to be able to writ
 <details>
 <summary><h2>Background: Accessibility tree, Accessibility APIs, AAMs</h2></summary>
 
-### Background: the accessibility tree and accessibility APIs
-
+### The Accessibility Tree and Accessibility APIs
 ![Diagram showing the interaction between a browser and accessibility APIs. See text below for more detail.](assets/accessibility_apis.png)
 
 <details id="accessibility_apis_diagram">
@@ -44,12 +43,12 @@ Each platform's accessibility APIs provide methods to query the tree structure, 
 They also typically provide ways to interact with the UI, such as sending a "click" action to the currently visited UI element, or selecting a particular option from a picker.
 Also, they provide ways for the UI to provide real-time updates or alerts in case of UI changing in a way that should be brought to the user's attention.
 
-#### The computed accessibility tree
+### The computed accessibility tree
 
 Since browser engines are typically platform-independent, typically they will compute a generic accessibility tree which can be adapted to any platform's accessibility APIs.
 The platform APIs are typically supported using an adapter which maps the platform API on to data from the computed accessibility tree.
 
-### Background: AAM specifications
+### AAM specifications
 
 The AAM specifications provide mappings between web technologies such as ARIA and HTML, and platform accessibility APIs.
 
