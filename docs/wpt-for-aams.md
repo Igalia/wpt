@@ -4,7 +4,7 @@ This document explores the possibility of writing WPT tests for the AAM specific
 
 ## Overview
 
-The Accessiblity API Mapping (AAM) specifications ([Core-AAM](https://www.w3.org/TR/core-aam-1.2/), [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/), potentially [MathML-AAM](https://w3c.github.io/mathml-aam/), [CSS-AAM](https://w3c.github.io/css-aam/)) describe how user agents should expose semantics of web content languages to accessibility APIs.
+The Accessiblity API Mapping (AAM) specifications ([Core-AAM](https://www.w3.org/TR/core-aam-1.2/), [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/), [SVG-AAM](https://www.w3.org/TR/svg-aam-1.0/), potentially [MathML-AAM](https://w3c.github.io/mathml-aam/), [CSS-AAM](https://w3c.github.io/css-aam/)) describe how user agents should expose semantics of web content languages to accessibility APIs.
 
 These documents, taken together, describe how the browser should build an accessibility tree for each web page, and how the tree should be mapped to various accessibility platform APIs.
 
@@ -182,7 +182,7 @@ to allow accessing a full "computed accessibility node" for an element.
 This would allow fetching a much more extensive set of computed accessibility properties for an element via WebDriver.
 Like Computed Label and Computed Role, these would be querying the platform-independent, computed accessibility tree.
 
-## Testing AAMs via platform accessibility APIs directly
+## Proposal: testing AAMs via platform accessibility APIs directly
 
 ![Diagram showing the proposed addition: querying the browser from WPT via the platform accessibility APIs. Full description below.](assets/platform_accessibility_api_testing.png)
 
@@ -202,6 +202,163 @@ This matches the way that Assistive Technology communicates with the browser app
 
 We think testing the computed accessibility tree is extremely useful in itself,
 and a good fit for the platform-independent nature of browser testing and WebDriver specifically.
-We think it would be equally good to be able to directly test that each browser's platform API support conforms to the AAM specifications,
-and that the ideal way to test that is to use the APIs directly,
+It provides a good foundation for ensuring that
+the first stage of accessibility API mapping for web features has been implemented,
+since in almost every case browsers will need to implement the cross-platform tree
+as a prerequisite for implementing the platform-specific APIs.
+
+We think it would be equally good to be able to directly test that each browser's platform API support conforms to the AAM specifications. The easiest and most reliable way to test that is to use the APIs directly,
 matching the way that assistive technology communicates with the browser.
+An alternative would be to extend WebDriver to mirror each platform API's vocabulary.
+This would involve a great deal of work to specify how those vocabularies should be expressed
+through WebDriver and testdriver,
+and implementation work to implement those APIs and test the implementation,
+before we could even write any tests using the WebDriver version.
+
+<details>
+<summary>
+<h3>
+Example: computed accessiblity tree vs. platform API mapping for <code>&lt;input type="password"&gt;</code>
+</h3>
+</summary>
+
+The table below is excerpted from the <a href="https://www.w3.org/TR/html-aam-1.0/#el-input-password" id="el-input-password">HTML-AAM mapping for `input` (`type` attribute in the Password state)</a>:
+
+<table aria-labelledby="el-input-password">
+  <tbody>
+    <tr>
+      <th>[<cite><a class="bibref" data-link-type="biblio" href="#bib-wai-aria-1.2" title="Accessible Rich Internet Applications (WAI-ARIA) 1.2">wai-aria-1.2</a></cite>]</th>
+      <td>No corresponding role</td>
+    </tr>
+    <tr>
+      <th><a href="https://www.w3.org/TR/core-aam-1.2/#roleMappingComputedRole">Computed Role</a></th>
+      <td class="role-computed"><div class="general">html-input-password</div></td>
+    </tr>
+    <tr>
+      <th>
+        <a href="https://msdn.microsoft.com/en-us/library/dd373608%28v=VS.85%29.aspx"><abbr title="Microsoft Active Accessibility">MSAA</abbr></a> + <a href="http://accessibility.linuxfoundation.org/a11yspecs/ia2/docs/html/">IAccessible2</a>
+      </th>
+      <td>
+        <div class="role"><span class="type">Role:</span> <code>ROLE_SYSTEM_TEXT</code></div>
+        <div class="states"><span class="type">States:</span> <code>STATE_SYSTEM_PROTECTED</code>; <code>IA2_STATE_SINGLE_LINE</code>; <code>STATE_SYSTEM_READONLY</code> if readonly, otherwise <code>IA2_STATE_EDITABLE</code></div>
+      </td>
+    </tr>
+    <tr>
+      <th><a href="https://msdn.microsoft.com/en-us/library/ms726297%28v=VS.85%29.aspx">UIA</a></th>
+      <td>
+        <div class="ctrltype"><span class="type">Control Type:</span> <code>Edit</code></div>
+        <div class="properties"><span class="type">Localized Control Type:</span> <code>"password"</code></div>
+        <div class="properties"><span class="type">Other properties: </span>Set <code>isPassword</code> to <code>true</code></div>
+      </td>
+    </tr>
+    <tr>
+      <th><a href="https://gnome.pages.gitlab.gnome.org/atk/">ATK</a></th>
+      <td>
+        <div class="role"><span class="type">Role:</span> <code>ATK_ROLE_PASSWORD_TEXT</code></div>
+        <div class="states"><span class="type">States:</span> <code>ATK_STATE_SINGLE_LINE</code>; <code>ATK_STATE_READ_ONLY</code> if readonly, otherwise <code>ATK_STATE_EDITABLE</code></div>
+      </td>
+    </tr>
+    <tr>
+      <th><a href="https://developer.apple.com/reference/appkit/nsaccessibility">AX</a></th>
+      <td>
+        <div class="role"><span class="type">AXRole:</span> <code>AXTextField</code></div>
+        <div class="subrole"><span class="type">AXSubrole:</span> <code>AXSecureTextField</code></div>
+        <div class="roledesc"><span class="type">AXRoleDescription:</span> <code>"secure text field"</code></div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Since each platform accessibility API has its own vocabulary and its own conceptual framework,
+the concept of "password field" is expressed differently in each API.
+
+Where the computed accessibility tree on each platform would contain a node
+with the role `"html-input-password"`,
+the browser would need to adapt that computed role to each platform API correctly
+in order for users of the assistive technologies which query those APIs
+to be able to use the browser.
+</details>
+
+## Open questions
+
+We have an [experimental patch](https://github.com/Igalia/wpt/pull/2/files)
+which implements a proof-of-concept for using platform APIs
+(currently AT-SPI on Linux, and the Mac OS X ACcessibility Protocol)
+to query browsers under test and make assertions about their accessibility implementations.
+
+
+This patch works by:
+- Adding a set of platform-specific `ExecutorImpl` classes,
+  [`AtspiExecutorImpl`](https://github.com/Igalia/wpt/pull/2/files#diff-9247f1aa2fe3d167af87ee04c48bc3ceb244d3de5040fdf97cdb129e05fa47e4) and
+  [`AXAPIExecutorImpl`](https://github.com/Igalia/wpt/pull/2/files#diff-a52eb168f8a233c8e81ba15c97691a7ac144e3168a3bfbd2c6c80ece5ab55c58) (so far),
+  which can:
+  - find the browser application's root accessibility node
+  - find the root accessibility node for the browser's active tab
+  - find the accessibility node corresponding to a particular DOM ID
+  - serialize an accessibility node into a JSON string
+- Adding a `PlatformAccessibilityProtocolPart` class in a new file,
+  [`executors/executorplatformaccessibility.py`](https://github.com/Igalia/wpt/pull/2/files#diff-4136e59af143c98357cb7a6153da10afc1fde0c16a657194efd31b1b4edd4f50),
+  extending `ProtocolPart` and providing one protocol method,
+  `get_accessibility_api_node(self, dom_id)`.
+  - Unlike the other `ProtocolPart`s, `PlatformAccessibilityProtocolPart`
+    provides its own, canonical implementation for its protocol method.
+  - During its `setup()`, `PlatformAccessibilityProtocolPart`
+    instantiates the appropriate platform-specific accessibility API executor class:
+    `AtspiExecutorImpl` for Linux, and `AXAPIExecutorImpl` for Mac.
+    (In future, we will need to implement the analogous classes for the two Windows APIs,
+    and figure out an API to query either or both.)
+  - When `get_accessibility_api_node()` is called, the platform-specific Executor's
+    `get_accessibility_api_node()` implementation is used to serialize the relevant
+    accessibility information into a JSON string.
+  - We may eventually decide a more granular API is preferable;
+    `get_accessibility_api_node()` was the easiest to use to write a proof-of-concept test
+- Importing the `PlatformAccessibilityProtocolPart` class into
+  [`executorwebdriver.py`](https://github.com/Igalia/wpt/pull/2/files#diff-e5a8911dd97e0352b1b26d8ce6ef0a92b25378f7c9e79371a1eb1b1834bc9a8d) and
+  [`executormarionette.py`](https://github.com/Igalia/wpt/pull/2/files#diff-df97e1990f484c82b8d8a34baf584d01761bfd98386beb69fac702edb31003a3),
+  adding it to the list of `implements` `ProtocolPart`s for
+  `MarionetteProtocol` and `WebDriverProtocol`.
+- [Adding a `GetAccessibilityAPINodeAction`](https://github.com/Igalia/wpt/pull/2/files#diff-57303393b05825acd5eb3124fb15dd5c9f9b996eb898b659fbb3676fc247a8f3) class
+  in `executors/actions.py`,
+  which calls into `protocol.platform_accessibility.get_accessibility_api_node()`
+- [Extending `testdriver-extra.js`](https://github.com/Igalia/wpt/pull/2/files#diff-46aeeb40b0a0c13031b151392ca70a17614295533d3e890c0cb4360cb3b91542)
+  to add a `get_accessibility_api_node()` method,
+  which runs a `"get_accessibility_api_node"` action
+- [Extending `testdriver.js`](https://github.com/Igalia/wpt/pull/2/files#diff-1fe2b624679a3150e5c86f84682c5901b715dad750096a524e8cb23939e5590f)
+  to add a `get_accessibility_api_node()` method,
+  which calls into `test_driver_internal`'s `get_accessibility_api_node()` method
+
+Some extra implementation details:
+- Threading [`Product.name`](https://github.com/web-platform-tests/wpt/blob/db43136df5ed567566e1b57bb715ca1582138afd/tools/wptrunner/wptrunner/products.py#L22)
+  from `wptrunner.run_test_interation()` through to the relevant `Protocol` subclasses
+  ([`WebDriverProtocol`](https://github.com/Igalia/wpt/pull/2/files#diff-e5a8911dd97e0352b1b26d8ce6ef0a92b25378f7c9e79371a1eb1b1834bc9a8dR448) and
+  [`MarionetteProtocol`](https://github.com/Igalia/wpt/pull/2/files#diff-df97e1990f484c82b8d8a34baf584d01761bfd98386beb69fac702edb31003a3R766)),
+  where it can be
+  [read by `PlatformAccessibilityProtocolPart`](https://github.com/Igalia/wpt/pull/2/files#diff-4136e59af143c98357cb7a6153da10afc1fde0c16a657194efd31b1b4edd4f50R23)
+  and passed to the platform-specific `ExecutorImpl`
+  - See "Getting the browser PID" below
+- Threading a `--force_renderer_accessibility` argument from the
+  [WPT command line](https://github.com/Igalia/wpt/pull/2/files#diff-a9049174d0964d96a0664440110a1f081edc89601a3caa9d52209a6af24e4f5d)
+  to the [Chrome](https://github.com/Igalia/wpt/pull/2/files#diff-0bfb8dd5978f182d6fc8ba9e085c743dd6ae9d76fcbd1aa326e9b0aa9bf3a829R522)
+  command line
+
+### Extending `testdriver.js`
+
+
+### [Getting the browser PID](https://github.com/w3c/webdriver/issues/1823)
+
+In order to query the browser application via accessibility APIs,
+we need a reliable way to find the correct browser application.
+The [proof of concept](https://github.com/Igalia/wpt/pull/2/files)
+uses the application name;
+however this creates obvious problems if you're trying to use a particular browser
+at the same time as WPT is running a separate instance of the same browser for testing.
+
+So far, the best way we've found is to use the process ID;
+this allows us to unambiguously find the browser process under test.
+However, since WPT often doesn't start browsers directly,
+but uses an automation tool like Marionette or ChromeDriver,
+we can't always get the process ID of the browser easily from WPT.
+
+Valerie has filed [an issue](https://github.com/w3c/webdriver/issues/1823)
+on WebDriver to propose adding a mechanism to request the browser PID,
+potentially through the `capabilities` object used when creating a Session.
