@@ -280,7 +280,7 @@ in order for users of the assistive technologies which query those APIs
 to be able to use the browser.
 </details>
 
-## Open questions
+## Proof-of-concept patch
 
 We have an [experimental patch](https://github.com/Igalia/wpt/pull/2/files)
 which implements a proof-of-concept for using platform APIs
@@ -345,6 +345,8 @@ Some extra implementation details:
   [WPT command line](https://github.com/Igalia/wpt/pull/2/files#diff-a9049174d0964d96a0664440110a1f081edc89601a3caa9d52209a6af24e4f5d)
   to the [Chrome](https://github.com/Igalia/wpt/pull/2/files#diff-0bfb8dd5978f182d6fc8ba9e085c743dd6ae9d76fcbd1aa326e9b0aa9bf3a829R522)
   command line
+
+## Open questions
 
 ### Extending `testdriver.js`/`testdriver-extra.js`
 
