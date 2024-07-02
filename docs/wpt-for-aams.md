@@ -209,6 +209,7 @@ as a prerequisite for implementing the platform-specific APIs.
 
 We think it would be equally good to be able to directly test that each browser's platform API support conforms to the AAM specifications. The easiest and most reliable way to test that is to use the APIs directly,
 matching the way that assistive technology communicates with the browser.
+
 An alternative would be to extend WebDriver to mirror each platform API's vocabulary.
 This would involve a great deal of work to specify how those vocabularies should be expressed
 through WebDriver and testdriver,
@@ -286,7 +287,6 @@ which implements a proof-of-concept for using platform APIs
 (currently AT-SPI on Linux, and the Mac OS X ACcessibility Protocol)
 to query browsers under test and make assertions about their accessibility implementations.
 
-
 This patch works by:
 - Adding a set of platform-specific `ExecutorImpl` classes,
   [`AtspiExecutorImpl`](https://github.com/Igalia/wpt/pull/2/files#diff-9247f1aa2fe3d167af87ee04c48bc3ceb244d3de5040fdf97cdb129e05fa47e4) and
@@ -301,7 +301,8 @@ This patch works by:
   extending `ProtocolPart` and providing one protocol method,
   `get_accessibility_api_node(self, dom_id)`.
   - Unlike the other `ProtocolPart`s, `PlatformAccessibilityProtocolPart`
-    provides its own, canonical implementation for its protocol method.
+    provides its own, canonical implementation for its protocol method,
+    and is **not** listed in `protocol.py`
   - During its `setup()`, `PlatformAccessibilityProtocolPart`
     instantiates the appropriate platform-specific accessibility API executor class:
     `AtspiExecutorImpl` for Linux, and `AXAPIExecutorImpl` for Mac.
@@ -326,6 +327,10 @@ This patch works by:
 - [Extending `testdriver.js`](https://github.com/Igalia/wpt/pull/2/files#diff-1fe2b624679a3150e5c86f84682c5901b715dad750096a524e8cb23939e5590f)
   to add a `get_accessibility_api_node()` method,
   which calls into `test_driver_internal`'s `get_accessibility_api_node()` method
+  - See "Extending `testdriver.js`" below
+- Adding a [proof-of-concept Testharness test](https://github.com/Igalia/wpt/pull/2/files#diff-4c6cae4648eadb186a175370e04a9e9581664a469c60fdb72d0d20600b28adeb),
+  which uses the new `get_accessibility_api_node` to get the platform-specific role
+  for a particular element.
 
 Some extra implementation details:
 - Threading [`Product.name`](https://github.com/web-platform-tests/wpt/blob/db43136df5ed567566e1b57bb715ca1582138afd/tools/wptrunner/wptrunner/products.py#L22)
@@ -341,8 +346,71 @@ Some extra implementation details:
   to the [Chrome](https://github.com/Igalia/wpt/pull/2/files#diff-0bfb8dd5978f182d6fc8ba9e085c743dd6ae9d76fcbd1aa326e9b0aa9bf3a829R522)
   command line
 
-### Extending `testdriver.js`
+### Extending `testdriver.js`/`testdriver-extra.js`
 
+Does it make sense to include this functionality directly in `testdriver.js`?
+
+Should it be split out into a separate file?
+
+Should we make an RFC anyway?
+
+### `GetAccessibilityAPINodeAction`/`PlatformAccessibilityProtocolPart` design
+
+`executorplatformaccessibility.py` both defines and implements `PlatformAccessibilityProtocolPart`.
+This allows it to instantiate the appropriate platform-specific platform accessibility executor implementation.
+
+It's then imported into executors which provide their own implementations of
+the pure-virtual `ProtocolPart` classes in `protocol.py`.
+This allows `CallbackHandler` in `executors/base.py` to use the `GetAccessibilityAPINodeAction`
+like any other action in `actions.py`,
+since it doesn't need to define a separate `Protocol`:
+
+`executors/actions.py`:
+```py
+class GetAccessibilityAPINodeAction:
+    name = "get_accessibility_api_node"
+
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        dom_id = payload["dom_id"]
+        return self.protocol.platform_accessibility.get_accessibility_api_node(dom_id)
+```
+
+`executors/base.py`:
+```py
+from .actions import actions
+
+# Instantiated in do_testharness in executor{marionette,webdriver}, passing in
+# {Marionette,WebDriver}Protocol instances respectively
+class CallbackHandler:
+    """Handle callbacks from testdriver-using tests.
+
+    The default implementation here makes sense for things that are roughly like
+    WebDriver. Things that are more different to WebDriver may need to create a
+    fully custom implementation."""
+
+    def __init__(self, logger, protocol, test_window):
+        self.protocol = protocol
+        self.actions = {cls.name: cls(self.logger, self.protocol) for cls in actions}
+```
+
+Does it make sense to piggy-back off the other `Protocol` implementations in this way?
+
+### Using the `testharness` test type rather than some new thing
+
+We definitely want to be able to _use_ `testdriver.js` and `testharness{,report}.js` in our tests,
+since we want to be able to use WebDriver's automation functionality to interact with the page,
+and we don't want to invent a new form of testing fron scratch.
+
+However, we're wondering whether it might make sense to define a new test type
+for these tests which are interacting with the browser locally via the platform accessibility APIs,
+rather than via WebDriver.
+
+- What would be involved in defining a new test type which can still use that existing infrastructure?
+- Would that make it simpler to, for example, define new types of `CallbackHandler` and `Action` rather than piggy-backing on the existing `Protocol` implementations?
 
 ### [Getting the browser PID](https://github.com/w3c/webdriver/issues/1823)
 
