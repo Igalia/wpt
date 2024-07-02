@@ -362,7 +362,18 @@ Should we make an RFC anyway?
 This allows it to instantiate the appropriate platform-specific platform accessibility executor implementation.
 
 It's then imported into executors which provide their own implementations of
-the pure-virtual `ProtocolPart` classes in `protocol.py`.
+the pure-virtual `ProtocolPart` classes in `protocol.py`:
+
+`executors/executorwebdriver.py`:
+```py
+from .executorplatformaccessibility import (PlatformAccessibilityProtocolPart)
+
+class WebDriverProtocol(Protocol):
+    implements = [WebDriverBaseProtocolPart,
+                  ...,
+                  PlatformAccessibilityProtocolPart]
+```
+
 This allows `CallbackHandler` in `executors/base.py` to use the `GetAccessibilityAPINodeAction`
 like any other action in `actions.py`,
 since it doesn't need to define a separate `Protocol`:
@@ -413,6 +424,24 @@ rather than via WebDriver.
 
 - What would be involved in defining a new test type which can still use that existing infrastructure?
 - Would that make it simpler to, for example, define new types of `CallbackHandler` and `Action` rather than piggy-backing on the existing `Protocol` implementations?
+
+### Per-platform tests
+
+Is there an existing way to write platform-specific tests?
+
+Our proof-of-concept test has only one sub-test, and it has assertions for each of the supported platforms.
+
+It may be that we don't always have that level of correspondence between platforms for what we need to test.
+It may also simply be more convenient to write individual tests per platform,
+rather than requiring each test to include assertions for each platform.
+
+In particular, if we end up having a more granular API than `get_accessibility_api_node()` returning a bag of properties,
+we may want to avoid needing to do the type of OS check we do in this test (via `node.API`),
+so that we can call the more granular, platform-specific APIs knowing that they will be available in that context.
+
+We're very much still figuring out how the eventual tests might be structured,
+but if there's already a way to run specific tests based on the platform,
+that would be good to know.
 
 ### [Getting the browser PID](https://github.com/w3c/webdriver/issues/1823)
 
