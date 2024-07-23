@@ -85,15 +85,21 @@ def serialize_node(node):
 class AXAPIExecutorImpl:
     def setup(self, product_name):
         self.product_name = product_name
-        self.root = find_browser(self.product_name)
-
-        if not self.root:
-            raise Exception(f"Couldn't find application: {product_name}")
+        self.root = None
+        self.document = None
+        self.test_url = None
 
 
     def get_platform_accessibility_node(self, dom_id, url):
+        if not self.root:
+            self.root = find_browser(self.product_name)
+            if not self.root:
+                raise Exception(
+                    f"Couldn't find browser {self.product_name} in accessibility API: AX API. Did you turn on accessibility?"
+                )
+
         tab = find_active_tab(self.root)
         node = find_node(tab, "AXDOMIdentifier", dom_id)
         if not node:
-            raise Exception(f"Couldn't find node with ID {dom_id}. Try passing --force-renderer-accessibility.")
+            raise Exception(f"Couldn't find node with ID {dom_id}.")
         return json.dumps(serialize_node(node))
