@@ -1075,8 +1075,8 @@
          * @returns {Promise} Fullfilled with object representing accessibilty node,
          *                    rejected in the cases of failures.
          */
-        get_accessibility_api_node: async function(dom_id) {
-            return window.test_driver_internal.get_accessibility_api_node(dom_id, location.href)
+        get_platform_accessibility_node: async function(dom_id) {
+            return window.test_driver_internal.get_platform_accessibility_node(dom_id, location.href)
                 .then((jsonresult) => {
                   return JSON.parse(jsonresult);
                 });
@@ -1270,8 +1270,8 @@
             throw new Error("clear_device_posture() is not implemented by testdriver-vendor.js");
         },
 
-        async get_accessibility_api_node(dom_id, url) {
-            throw new Error("get_accessibility_api_node() is not available.");
+        async get_platform_accessibility_node(dom_id, url) {
+            throw new Error("get_platform_accessibility_node() is not available.");
         }
     };
 })();

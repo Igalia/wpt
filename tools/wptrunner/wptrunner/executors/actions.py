@@ -465,7 +465,7 @@ class ClearDevicePostureAction:
         return self.protocol.device_posture.clear_device_posture()
 
 class GetAccessibilityAPINodeAction:
-    name = "get_accessibility_api_node"
+    name = "get_platform_accessibility_node"
 
     def __init__(self, logger, protocol):
         self.logger = logger
@@ -474,7 +474,7 @@ class GetAccessibilityAPINodeAction:
     def __call__(self, payload):
         dom_id = payload["dom_id"]
         url = payload["url"]
-        return self.protocol.platform_accessibility.get_accessibility_api_node(dom_id, url)
+        return self.protocol.platform_accessibility.get_platform_accessibility_node(dom_id, url)
 
 
 actions = [ClickAction,

@@ -115,7 +115,7 @@ class WindowsAccessibilityExecutorImpl:
     def setup(self, product_name):
         self.product_name = product_name
 
-    def get_accessibility_api_node(self, dom_id, url):
+    def get_platform_accessibility_node(self, dom_id, url):
         self.root = find_browser(self.product_name)
         if not self.root:
             raise Exception(f"Couldn't find browser {self.product_name}.")
