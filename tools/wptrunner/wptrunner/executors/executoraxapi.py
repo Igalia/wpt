@@ -11,6 +11,7 @@ from Cocoa import (
 )
 
 import json
+import time
 
 def find_browser(name):
     ws = NSWorkspace.sharedWorkspace()
@@ -26,9 +27,18 @@ def find_browser(name):
         return None
     return AXUIElementCreateApplication(pid)
 
+def poll_for_tab(root, product, url):
+    tab = find_tab(root, product, url)
+    loops = 0
+    while not tab:
+        loops += 1
+        time.sleep(0.01)
+        tab = find_tab(root, product, url)
 
-def find_active_tab(browser):
-    stack = [browser]
+    return tab
+
+def find_tab(root, product, url):
+    stack = [root]
     tabs = []
     while stack:
         node = stack.pop()
@@ -37,7 +47,11 @@ def find_active_tab(browser):
         if err:
             continue
         if role == "AXWebArea":
-            return node
+            (err, tab_url) = AXUIElementCopyAttributeValue(node, "AXURL", None)
+            if (str(tab_url) == url):
+              return node
+            else:
+              continue
 
         (err, children) = AXUIElementCopyAttributeValue(node, "AXChildren", None)
         if err:
@@ -98,8 +112,11 @@ class AXAPIExecutorImpl:
                     f"Couldn't find browser {self.product_name} in accessibility API: AX API. Did you turn on accessibility?"
                 )
 
-        tab = find_active_tab(self.root)
-        node = find_node(tab, "AXDOMIdentifier", dom_id)
+        if self.test_url != url or not self.document:
+           self.test_url = url
+           self.document = poll_for_tab(self.root, self.product_name, url)
+
+        node = find_node(self.document, "AXDOMIdentifier", dom_id)
         if not node:
             raise Exception(f"Couldn't find node with ID {dom_id}.")
         return json.dumps(serialize_node(node))
