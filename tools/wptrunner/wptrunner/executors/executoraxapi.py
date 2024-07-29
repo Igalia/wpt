@@ -27,17 +27,17 @@ def find_browser(name):
         return None
     return AXUIElementCreateApplication(pid)
 
-def poll_for_tab(root, product, url):
-    tab = find_tab(root, product, url)
+def poll_for_tab(root, url):
+    tab = find_tab(root, url)
     loops = 0
     while not tab:
         loops += 1
         time.sleep(0.01)
-        tab = find_tab(root, product, url)
+        tab = find_tab(root, url)
 
     return tab
 
-def find_tab(root, product, url):
+def find_tab(root, url):
     stack = [root]
     tabs = []
     while stack:
@@ -114,7 +114,7 @@ class AXAPIExecutorImpl:
 
         if self.test_url != url or not self.document:
            self.test_url = url
-           self.document = poll_for_tab(self.root, self.product_name, url)
+           self.document = poll_for_tab(self.root, url)
 
         node = find_node(self.document, "AXDOMIdentifier", dom_id)
         if not node:
