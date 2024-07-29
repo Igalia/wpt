@@ -12,7 +12,7 @@
 
   <script>
     promise_test(async t => {
-      const node = await test_driver.get_accessibility_api_node('test');
+      const node = await test_driver.get_platform_accessibility_node('test');
 
       if (node.API == 'atspi') {
         assert_equals(node.role, 'push button', 'Atspi role');
