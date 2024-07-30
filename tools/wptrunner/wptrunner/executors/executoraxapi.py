@@ -48,7 +48,8 @@ def find_tab(root, url):
             continue
         if role == "AXWebArea":
             (err, tab_url) = AXUIElementCopyAttributeValue(node, "AXURL", None)
-            if (str(tab_url) == url):
+            # tab_url is a NSURL object and must be converted to string.
+            if not err and str(tab_url) == url:
               return node
             else:
               continue
