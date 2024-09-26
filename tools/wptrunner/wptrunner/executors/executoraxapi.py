@@ -2,6 +2,7 @@ from ApplicationServices import (
     AXUIElementCopyAttributeNames,
     AXUIElementCopyAttributeValue,
     AXUIElementCreateApplication,
+    AXUIElementSetAttributeValue,
 )
 
 from Cocoa import (
@@ -22,10 +23,16 @@ def find_browser(name):
     if filtered_apps.count() == 0:
         return None
     app = filtered_apps[0]
+
     pid = app.processIdentifier()
     if pid == -1:
         return None
-    return AXUIElementCreateApplication(pid)
+    browser = AXUIElementCreateApplication(pid)
+    activate_accessibility(browser)
+    return browser
+
+def activate_accessibility(browser):
+    AXUIElementSetAttributeValue(browser, "AXEnhancedUserInterface", 1)
 
 def poll_for_tab(root, url):
     tab = find_tab(root, url)
