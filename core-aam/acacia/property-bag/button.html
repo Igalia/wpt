@@ -15,7 +15,7 @@
       const node = await test_driver.get_accessibility_api_node('test');
 
       if (node.API == 'atspi') {
-        assert_equals(node.role, 'push button', 'Atspi role');
+        assert_equals(node.role, 'button', 'Atspi role');
       }
       else if (node.API == 'axapi') {
         assert_equals(node.role, 'AXButton', 'AX API role');
